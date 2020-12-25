@@ -1,3 +1,4 @@
+import threading as thr
 from BusinessTravel import Travel
 from flask import *
 
@@ -13,12 +14,17 @@ def index():
 
 @app.route("/get_prices", methods=["GET", "POST"])
 def get_prices():
-    try:
-        a = request.values
-        print(a["originCity"], a["destinationCity"], a["originDate"], a["destinationDate"])
-    except Exception as e:
-        print(e)
-    return json.dumps({"oshibka": "uspeh"})
+    a = request.values
+    print(f'Получены данные: {a["originCity"]}, {a["destinationCity"]}, {a["originDate"]}, {a["destinationDate"]}')
+    search = Travel(a["originCity"], a["destinationCity"],
+                    a["originDate"], a["destinationDate"])
+    th = thr.Thread(target=search.search_aviatickets)
+    th2 = thr.Thread(target=search.search_hostels)
+    th.start()
+    th2.start()
+    th.join()
+    th2.join()
+    return json.dumps({"tickets": search.tickets, "hotels": search.hotels})
 
 
 def main():
